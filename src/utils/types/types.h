@@ -38,7 +38,7 @@ private:
     std::map<GLchar, Character> Characters;
 public:
     Font();
-    void draw_text(std::string text_display, float x_pos, float y_pos, float scale, glm::vec3 color);
+    void draw_text(std::string text_display = "", float x_pos = 0, float y_pos = 20, float scale = 0.4f, glm::vec3 color = glm::vec3(0, 0, 0), float z_index = 0.0f);
     void init(std::string font_name);
 };
 
@@ -329,13 +329,13 @@ private:
 
 
 
-class UI_IMG{
+class UI_IMG {
 private:
     int id;
     float opacity;
     int width, height, x_pos, y_pos, z_index;
     std::string texture_path;
-	unsigned int VAO, VBO, texture;
+    unsigned int VAO, VBO, texture;
     glm::mat4 projection;
 public:
     void set_width(int width);
@@ -364,8 +364,9 @@ private:
     int id;
     glm::vec3 color;
     int x_pos, y_pos;
+    float z_index = 0.0f;
     Font font;
-    float scale = 0.4;
+    float scale = 0.4f;
     std::string text;
     std::string font_name;
 public:
@@ -374,5 +375,6 @@ public:
     void set_x_pos(int x_pos);
     void set_y_pos(int y_pos);
     void set_color(glm::vec3 color);
-    UI_FONT(int x_pos = 0, int y_pos = 30, glm::vec3 color = glm::vec3(0, 0, 0), float scale = 0.4, std::string font_name = "assets/JetBrainsMono-Medium.ttf", std::string text = "");
+    void set_z_index(float z_index);
+    UI_FONT(int x_pos = 0, int y_pos = 30, glm::vec3 color = glm::vec3(0, 0, 0), float scale = 0.4, std::string font_name = "", std::string text = "", float z_index = 0.0f);
 };
