@@ -2,7 +2,16 @@
 
 
 
+UI_ELEM_LIST loading_ui_list;
 
+
+void init_ui()
+{
+	UI_FONT ui_font(100, 200, glm::vec3(0, 0, 0), 0.4f, "assets/font/Roboto-Regular.ttf", "OpenGUI", 0.4f);
+	UI_IMG ui_img(836, 600, 0, 600, "assets/loader_background.jpg", 0.1f);
+	loading_ui_list.add_ui_img(ui_img);
+	loading_ui_list.add_ui_font(ui_font);
+}
 
 
 void show_loading_window()
@@ -38,9 +47,8 @@ void show_loading_window()
 	}
 
 	Global::init_shaders();
+	init_ui();
 	
-	UI_FONT ui_font(100, 200, glm::vec3(0, 0, 0), 0.4f, "assets/font/Roboto-Regular.ttf", "OpenGUI", 0.0f);
-	UI_IMG ui_img(836, 600, 0, 600, "assets/loader_background.jpg", 0.1f);
 	
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -49,8 +57,7 @@ void show_loading_window()
     {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		ui_img.draw();
-		ui_font.draw();
+		loading_ui_list.render();
         glfwSwapBuffers(window);
         glfwPollEvents();
 		

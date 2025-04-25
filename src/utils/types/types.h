@@ -378,3 +378,38 @@ public:
     void set_z_index(float z_index);
     UI_FONT(int x_pos = 0, int y_pos = 30, glm::vec3 color = glm::vec3(0, 0, 0), float scale = 0.4, std::string font_name = "", std::string text = "", float z_index = 0.0f);
 };
+
+class UI_BUTTON {
+private:
+    unsigned int VAO, VBO;
+    int id;
+    glm::vec3 background_color;
+    void (*onclick)();
+    float z_index;
+    int width, height,
+        x_pos, y_pos;
+public:
+    UI_BUTTON(int width, int height, int x_pos, int y_pos, float z_index, void(*onclick)(), glm::vec3 background_color);
+    void draw();
+    void set_width(int width);
+    void set_height(int height);
+    void set_x_pos(int x_pos);
+    void set_y_pos(int y_pos);
+    void set_on_click(void(*onclick)());
+};
+
+
+
+class UI_ELEM_LIST {
+private:
+    std::vector<UI_IMG> ui_img_list;
+    std::vector<UI_FONT> ui_font_list;
+    std::vector<UI_BUTTON> ui_button_list;
+    int id;
+public:
+    UI_ELEM_LIST();
+    void render();
+    void add_ui_img(UI_IMG elem);
+    void add_ui_font(UI_FONT elem);
+    void add_ui_button(UI_BUTTON elem);
+};
