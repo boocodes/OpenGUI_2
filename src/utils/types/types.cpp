@@ -4,6 +4,7 @@
 
 
 
+// UI FONT ELEM
 
 UI_FONT::UI_FONT(int x_pos, int y_pos, glm::vec3 color, float scale, std::string font_name, std::string text, float z_index)
 {
@@ -44,6 +45,7 @@ void UI_FONT::set_y_pos(int y_pos)
 	this->y_pos = y_pos;
 }
 
+// FONT GENERAL CLASS
 
 void Font::draw_text(std::string text_display, float x_pos, float y_pos, float scale, glm::vec3 color, float z_index)
 {
@@ -54,7 +56,7 @@ void Font::draw_text(std::string text_display, float x_pos, float y_pos, float s
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Global::font_shader.use();
 	Global::font_shader.setMat4("projection", pixel_simple_placement_projection);
-	Global::font_shader.setVec3("color", color);
+	Global::font_shader.setVec3("textColor", color);
 	Global::font_shader.setFloat("z_index", z_index);
 	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(this->VAO);
@@ -92,7 +94,6 @@ void Font::draw_text(std::string text_display, float x_pos, float y_pos, float s
 	glDisable(GL_CULL_FACE);
 
 }
-
 Font::Font()
 {
 
@@ -174,9 +175,11 @@ void Font::init(std::string font_name)
 	
 }
 
+// UI IMG ELEM
 
 UI_IMG::UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_path, float z_index)
 {
+	this->opacity = 1.0f;	
 	this->texture_path = texture_path;
 	this->width = width;
 	this->height = height;
@@ -191,10 +194,10 @@ UI_IMG::UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_
 	this->texture = load_texture(this->texture_path.c_str());
 
 	float coords[20] = {
-		static_cast<int>(x_pos), static_cast<int>(y_pos), z_index,								1.0f, 1.0f,
-		static_cast<int>(x_pos + this->width), static_cast<int>(y_pos), z_index,				1.0f, 0.0f,
-		static_cast<int>(x_pos + this->width), static_cast<int>(y_pos - this->height), z_index, 0.0f, 0.0f,
-		static_cast<int>(x_pos), static_cast<int>(y_pos - this->height), z_index,				0.0f, 1.0f,
+		static_cast<int>(x_pos), static_cast<int>(y_pos), this->z_index,								1.0f, 1.0f,
+		static_cast<int>(x_pos + this->width), static_cast<int>(y_pos), this->z_index,				    1.0f, 0.0f,
+		static_cast<int>(x_pos + this->width), static_cast<int>(y_pos - this->height), this->z_index,   0.0f, 0.0f,
+		static_cast<int>(x_pos), static_cast<int>(y_pos - this->height), this->z_index,				    0.0f, 1.0f,
 	};
 
 	glGenVertexArrays(1, &this->VAO);
@@ -276,7 +279,7 @@ void UI_IMG::set_opacity(float opacity)
 	this->opacity = opacity;
 }
 
-
+// UI BUTTON ELEM
 
 void UI_BUTTON::set_height(int height)
 {
@@ -307,6 +310,10 @@ UI_BUTTON::UI_BUTTON(int width, int height, int x_pos, int y_pos, float z_index,
 	this->z_index = z_index;
 	this->onclick = onclick;
 	this->background_color = background_color;
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dist(0, 10000);
+	this->id = dist(gen);
 	float coords[12] = {
 		static_cast<float>(this->x_pos), static_cast<float>(this->y_pos), z_index,
 		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos), z_index,
@@ -330,6 +337,23 @@ void UI_BUTTON::draw()
 	glBindVertexArray(this->VAO);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
+void UI_BUTTON::resize(int width, int height)
+{
+	this->width = width;
+	this->height = height;
+}
+void UI_BUTTON::move(int x_pos, int y_pos)
+{
+	this->x_pos = x_pos;
+	this->y_pos = y_pos;
+}
+void UI_BUTTON::set_background_color(glm::vec3 background_color)
+{
+	this->background_color = background_color;
+}
+
+
+//UI ELEM LIST
 
 UI_ELEM_LIST::UI_ELEM_LIST()
 {
@@ -352,6 +376,10 @@ void UI_ELEM_LIST::add_ui_font(UI_FONT elem)
 }
 void UI_ELEM_LIST::render()
 {
+	for (size_t i = 0; i < this->ui_div_list.size(); i++)
+	{
+		this->ui_div_list.at(i).draw();
+	}
 	for (size_t i = 0; i < this->ui_img_list.size(); i++)
 	{
 		this->ui_img_list.at(i).draw();
@@ -364,4 +392,133 @@ void UI_ELEM_LIST::render()
 	{
 		this->ui_button_list.at(i).draw();
 	}
+	
+}
+void UI_ELEM_LIST::add_ui_div(UI_DIV elem)
+{
+	this->ui_div_list.push_back(elem);
+}
+// UI DIV ELEM
+
+UI_DIV::UI_DIV(int width, int height, int x_pos, int y_pos, float z_index, glm::vec3 background_color)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dist(0, 10000);
+	this->id = dist(gen);
+	this->width = width;
+	this->height = height;
+	this->x_pos = x_pos;
+	this->y_pos = y_pos;
+	this->z_index = z_index;
+	this->background_color = background_color;
+	glGenVertexArrays(1, &this->VAO);
+	glGenBuffers(1, &this->VBO);
+	glBindVertexArray(this->VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	float coords[12] = {
+		static_cast<float>(this->x_pos), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos - this->height), this->z_index,
+		static_cast<float>(this->x_pos), static_cast<float>(y_pos - this->height), this->z_index,
+	};
+	glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
+	glEnableVertexAttribArray(0);
+}
+void UI_DIV::set_background_color(glm::vec3 background_color)
+{
+	this->background_color = background_color;
+}
+void UI_DIV::resize(int width, int height)
+{
+	this->width = width;
+	this->height = height;
+	float coords[12] = {
+		static_cast<float>(this->x_pos), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos - this->height), this->z_index,
+		static_cast<float>(this->x_pos), static_cast<float>(this->y_pos - this->height), this->z_index,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
+}
+void UI_DIV::move(int x_pos, int y_pos)
+{
+	this->x_pos = x_pos;
+	this->y_pos = y_pos;
+	float coords[12] = {
+		static_cast<float>(this->x_pos), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(this->y_pos - this->height), this->z_index,
+		static_cast<float>(this->x_pos), static_cast<float>(this->y_pos - this->height), this->z_index,
+	};
+}
+void UI_DIV::draw()
+{
+	Global::pixel_placement_shader.use();
+	Global::pixel_placement_shader.setMat4("projection", pixel_simple_placement_projection);
+	Global::pixel_placement_shader.setVec3("color", this->background_color);
+	glBindVertexArray(this->VAO);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+void UI_DIV::centred()
+{
+	float new_x_pos = (WIDTH - this->width) / 2;
+	float coords[12] = {
+		new_x_pos, static_cast<float>(y_pos), this->z_index,
+		new_x_pos + this->width, static_cast<float>(this->y_pos), this->z_index,
+		new_x_pos + this->width, static_cast<float>(this->y_pos - this->height), this->z_index,
+		new_x_pos, static_cast<float>(this->y_pos - this->height), z_index,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
+}
+void UI_DIV::padding_bottom(int padding)
+{
+	float new_y_pos = static_cast<float>(this->y_pos + padding);
+	float coords[12] = {
+		static_cast<float>(this->x_pos), new_y_pos, this->z_index,
+		static_cast<float>(this->x_pos + this->width), new_y_pos, this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(new_y_pos - this->height), this->z_index,
+		static_cast<float>(this->x_pos), static_cast<float>(new_y_pos - this->height), this->z_index,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
+}
+void UI_DIV::padding_top(int padding)
+{
+	float new_y_pos = static_cast<float>(this->y_pos - padding);
+	float coords[12] = {
+		static_cast<float>(this->x_pos), new_y_pos, this->z_index,
+		static_cast<float>(this->x_pos + this->width), new_y_pos, this->z_index,
+		static_cast<float>(this->x_pos + this->width), static_cast<float>(new_y_pos - this->height), this->z_index,
+		static_cast<float>(this->x_pos), static_cast<float>(new_y_pos - this->height), this->z_index,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
+}
+void UI_DIV::padding_left(int padding)
+{
+	float new_x_pos = static_cast<float>(this->y_pos + padding);
+	float coords[12] = {
+		new_x_pos, static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(new_x_pos + this->width), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(new_x_pos + this->width), static_cast<float>(this->y_pos - this->height), this->z_index,
+		new_x_pos, static_cast<float>(this->y_pos - this->height), this->z_index,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
+}
+void UI_DIV::padding_right(int padding)
+{
+	float new_x_pos = static_cast<float>(this->y_pos - padding);
+	float coords[12] = {
+		new_x_pos, static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(new_x_pos + this->width), static_cast<float>(this->y_pos), this->z_index,
+		static_cast<float>(new_x_pos + this->width), static_cast<float>(this->y_pos - this->height), this->z_index,
+		new_x_pos, static_cast<float>(this->y_pos - this->height), this->z_index,
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
 }

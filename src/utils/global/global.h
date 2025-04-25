@@ -12,4 +12,5 @@ namespace Global {
     extern Shader img_shader;
     extern Shader pixel_placement_shader;
     void init_shaders();
+    void compute_projections();
 }

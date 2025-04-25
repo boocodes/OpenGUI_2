@@ -7,10 +7,14 @@ int HEIGHT = 600;
 
                                                 
 
-glm::mat4 pixel_simple_placement_projection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
+glm::mat4 pixel_simple_placement_projection;
 Shader Global::img_shader; // Определение глобального шейдера
 Shader Global::font_shader;
 Shader Global::pixel_placement_shader;
+void Global::compute_projections()
+{
+    pixel_simple_placement_projection = glm::ortho(0.0f, static_cast<float>(WIDTH), 0.0f, static_cast<float>(HEIGHT));
+}
 void Global::init_shaders() {
     try {
         Global::img_shader.generate(
