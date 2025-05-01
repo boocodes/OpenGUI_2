@@ -1,6 +1,8 @@
 #include "methods.h"
 #include "../global/global.h"
 
+    
+
 
 unsigned int load_texture(const char* path)
 {

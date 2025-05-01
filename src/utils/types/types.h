@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-
+#include <functional>
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -33,13 +33,14 @@ struct Character {
 class Font {
 private:
     int id;
+    int pixel_size_px = 48;
     std::string font_name;
     unsigned int VAO, VBO, texture;
     std::map<GLchar, Character> Characters;
 public:
     Font();
-    void draw_text(std::string text_display = "", float x_pos = 0, float y_pos = 20, float scale = 0.4f, glm::vec3 color = glm::vec3(0, 0, 0), float z_index = 0.0f);
-    void init(std::string font_name);
+    void draw_text(std::string text_display = "", float x_pos = 0, float y_pos = 20, glm::vec3 color = glm::vec3(0, 0, 0));
+    void init(std::string font_name, int pixel_size_px = 48);
 };
 
 
@@ -328,116 +329,105 @@ private:
 
 
 
+class UI_ELEMENT {
+public:
+    virtual ~UI_ELEMENT() = default;
+    virtual void draw() = 0;
+    virtual int get_z_index() = 0;
+    std::string type;
+};
 
-class UI_IMG {
-private:
+
+class UI_IMG : public UI_ELEMENT{
+public:
     int id;
+    std::string type = "img";
     float opacity;
     int width, height, x_pos, y_pos, z_index;
     std::string texture_path;
     unsigned int VAO, VBO, texture;
     glm::mat4 projection;
-public:
-    void set_width(int width);
-    void set_height(int height);
-    void set_x_pos(int x_pos);
-    void set_y_pos(int y_pos);
-    void set_z_index(float z_index);
     void set_texture(std::string texture_path);
-    void set_opacity(float opacity);
-    int get_id();
-    int get_width();
-    int get_height();
-    int get_x_pos();
-    int get_y_pos();
-    float get_z_index();
-    std::string get_texture_img();
-    float get_opacity();
-    UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_path, float z_index);
-    void draw();
+    UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_path, int z_index);
+    void draw() override;
+    int get_z_index() override{ return this->z_index; };
 };
 
-class UI_FONT {
-private:
+class UI_FONT : public UI_ELEMENT{
+public:
     int id;
+    std::string type = "font";
     glm::vec3 color;
     int x_pos, y_pos;
-    float z_index = 0.0f;
+    int z_index;
     Font font;
-    float scale = 0.4f;
+    int pixel_size_px = 24;
     std::string text;
     std::string font_name;
-public:
-    void draw();
-    void set_scale(float scale);
-    void set_x_pos(int x_pos);
-    void set_y_pos(int y_pos);
-    void set_color(glm::vec3 color);
-    int get_id() { return this->id; };
-    void set_z_index(float z_index);
-    UI_FONT(int x_pos, int y_pos, glm::vec3 color, float scale, std::string font_name, std::string text, float z_index);
+    int get_z_index() override { return this->z_index; };
+    void draw() override;
+    UI_FONT(int x_pos, int y_pos, glm::vec3 color, int pixel_size, std::string font_name, std::string text, int z_index);
 };
 
-class UI_BUTTON {
-private:
+class UI_BUTTON : public UI_ELEMENT{
+public:
     unsigned int VAO, VBO;
     int id;
+    std::string type = "button";
     glm::vec3 background_color;
     void (*onclick)();
-    float z_index;
+    int z_index;
     int width, height,
         x_pos, y_pos;
-public:
-    UI_BUTTON(int width, int height, int x_pos, int y_pos, float z_index, void(*onclick)(), glm::vec3 background_color);
-    void draw();
+    int get_z_index() override { return this->z_index; };
+    UI_BUTTON(int width, int height, int x_pos, int y_pos, int z_index, void(*onclick)(), glm::vec3 background_color);
+    void draw() override;
     void resize(int width, int height);
     void move(int x_pos, int y_pos);
     void set_background_color(glm::vec3 background_color);
-    void set_width(int width);
-    void set_height(int height);
-    void set_x_pos(int x_pos);
-    void set_y_pos(int y_pos);
-    void set_on_click(void(*onclick)());
-
-    int get_id() { return this->id; };
 };
 
-class UI_DIV {
-private:
+class UI_DIV : public UI_ELEMENT{
+public:
+    std::string type = "div";
     unsigned int VAO, VBO;
     int id;
     glm::vec3 background_color;
-    float z_index;
+    int get_z_index() override { return this->z_index; };
+    int z_index;
+    std::function<void()> onhover;
+    bool hovered = false;
+    void (*onclick)();
+    std::function<void()> onmouse_over;
+    float coords[12];
     int width, height,
         x_pos, y_pos;
-public:
-    UI_DIV(int width, int height, int x_pos, int y_pos, float z_index, glm::vec3 background_color);
+    UI_DIV(int width, int height, int x_pos, int y_pos, int z_index, glm::vec3 background_color);
     void move(int x_pos, int y_pos);
     void resize(int width, int height);
-    void draw();
-    void set_background_color(glm::vec3 background_color);
-    int get_id() { return this->id; };
+    void draw() override;
     void centred();
-    void padding_left(int padding);
+    void padding_left(int padding); 
     void padding_right(int padding);
     void padding_bottom(int padding);
     void padding_top(int padding);
+    void set_onclick(void(*onclick)()) { this->onclick = onclick; };
+    void attract_onclick() { this->onclick(); };
+    bool check_mouse_coords_equal(int mouse_x, int mouse_y);
+    void set_onhover(std::function<void()> onhover) { this->onhover = onhover; };
+    void attract_onhover() { this->onhover(); };
+    void set_hovered(bool hovered) { this->hovered = hovered; };
 };
 
 
 
 class UI_ELEM_LIST {
-private:
-    std::vector<UI_IMG> ui_img_list;
-    std::vector<UI_FONT> ui_font_list;
-    std::vector<UI_BUTTON> ui_button_list;
-    std::vector<UI_DIV> ui_div_list;
-    int id;
 public:
+    int id;
+    bool is_changed = false;
+    std::vector<std::unique_ptr<UI_ELEMENT>> ui_elements;
+
     UI_ELEM_LIST();
     void render();
-    void add_ui_div(UI_DIV elem);
-    void add_ui_img(UI_IMG elem);
-    void add_ui_font(UI_FONT elem);
-    void add_ui_button(UI_BUTTON elem);
+    void add_elem(std::unique_ptr<UI_ELEMENT> elem);
 };

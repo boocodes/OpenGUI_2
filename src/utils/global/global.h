@@ -5,6 +5,8 @@
 extern int WIDTH;
 extern int HEIGHT;
 
+
+
 extern glm::mat4 pixel_simple_placement_projection;
 
 namespace Global {

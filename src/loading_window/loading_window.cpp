@@ -1,38 +1,12 @@
 #include "loading_window.h"
 
 
-
-
-
-
-void progress_bar()
-{
-		
-}
-
-
-UI_ELEM_LIST loading_ui_list;
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 	WIDTH = width;
 	HEIGHT = height;
 	Global::compute_projections();
-}
-
-void init_ui()
-{
-	UI_FONT opengui_title(64, 480, glm::vec3(1, 1, 1), 0.8f, "assets/font/Roboto-Bold.ttf", "OpenGUI", 0.2f);
-	UI_IMG main_img(836, 600, 0, 600, "assets/loader_background.jpg", 0.0f);
-	UI_DIV loader_full_line(WIDTH, 4, 0, 21, 0.4f, glm::vec3(0.8745098039215686, 0.8745098039215686, 0.8745098039215686));
-	UI_FONT version_text(64, 450, glm::vec3(1, 1, 1), 0.35f, "assets/font/Roboto-Regular.ttf", "2025.0.1", 0.2f);
-	UI_DIV loading_elem(200, 50, 100, 200, 0.4f, glm::vec3(0, 1, 0));
-	loading_elem.centred();
-	loading_ui_list.add_ui_img(main_img);
-	loading_ui_list.add_ui_font(version_text);
-	loading_ui_list.add_ui_font(opengui_title);
-	loading_ui_list.add_ui_div(loading_elem);
-	loading_ui_list.add_ui_div(loader_full_line);
 }
 
 
@@ -61,23 +35,35 @@ void show_loading_window()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return;
 	}
-
+	
 	Global::init_shaders();
 	Global::compute_projections();
-	init_ui();
 	
+	int progress = 0;
+	UI_ELEM_LIST root_ui;
+	root_ui.add_elem(std::make_unique<UI_IMG>(WIDTH, HEIGHT, 0, HEIGHT, "assets/loader_background.jpg", 1));
+	root_ui.add_elem(std::make_unique<UI_FONT>(337, 280, glm::vec3(1, 1, 1), 40, "assets/font/Roboto-Bold.ttf", "OpenGUI", 2));
+	root_ui.add_elem(std::make_unique<UI_FONT>(390, 266, glm::vec3(1, 1, 1), 15, "assets/font/Roboto-Medium.ttf", "2025.0.1", 2));
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
     while (!glfwWindowShouldClose(window))
     {
+		if (progress >= WIDTH)
+		{
+			std::cout << progress << std::endl;
+			glfwTerminate();
+			return;
+		}
+		progress += 50;
+		Sleep(100);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		loading_ui_list.render();
+		root_ui.render();
         glfwSwapBuffers(window);
         glfwPollEvents();
 		
     }
-    glfwTerminate();
+   
     return;
 }
 

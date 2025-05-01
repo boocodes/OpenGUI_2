@@ -3,8 +3,6 @@
 
 int WIDTH = 836;
 int HEIGHT = 600;
-
-
                                                 
 
 glm::mat4 pixel_simple_placement_projection;

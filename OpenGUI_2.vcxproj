@@ -134,6 +134,7 @@
     <ClCompile Include="OpenGUI_2.cpp" />
     <ClCompile Include="src\application_window\application_window.cpp" />
     <ClCompile Include="src\loading_window\loading_window.cpp" />
+    <ClCompile Include="src\ui\ui.cpp" />
     <ClCompile Include="src\utils\global\global.cpp" />
     <ClCompile Include="src\utils\methods\methods.cpp" />
     <ClCompile Include="src\utils\types\types.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="OpenGUI_2.h" />
     <ClInclude Include="src\application_window\application_window.h" />
     <ClInclude Include="src\loading_window\loading_window.h" />
+    <ClInclude Include="src\ui\ui.h" />
     <ClInclude Include="src\utils\global\global.h" />
     <ClInclude Include="src\utils\methods\methods.h" />
     <ClInclude Include="src\utils\types\types.h" />
