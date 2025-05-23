@@ -3,7 +3,12 @@
 
 int WIDTH = 836;
 int HEIGHT = 600;
-                                                
+                    
+std::string working_path;
+std::string project_name;
+
+int mouse_x_pos = 0;
+int mouse_y_pos = 0;
 
 glm::mat4 pixel_simple_placement_projection;
 Shader Global::img_shader; // Определение глобального шейдера

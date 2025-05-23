@@ -105,12 +105,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\java2\source\repos\OpenGUI_2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Users\java2\source\repos\OpenGUI_2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;freetype.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -138,11 +139,16 @@
     <ClCompile Include="src\utils\global\global.cpp" />
     <ClCompile Include="src\utils\methods\methods.cpp" />
     <ClCompile Include="src\utils\types\types.cpp" />
+    <ClCompile Include="src\welcome_window\pages\addons_page\addons_page.cpp" />
+    <ClCompile Include="src\welcome_window\pages\documentation_page\documentation_page.cpp" />
+    <ClCompile Include="src\welcome_window\pages\environment_page\environment_page.cpp" />
     <ClCompile Include="src\welcome_window\welcome_window.cpp" />
+    <ClCompile Include="tinyxml2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\stb_image.h" />
+    <ClInclude Include="include\tinyxml2.h" />
     <ClInclude Include="OpenGUI_2.h" />
     <ClInclude Include="src\application_window\application_window.h" />
     <ClInclude Include="src\loading_window\loading_window.h" />
@@ -150,6 +156,9 @@
     <ClInclude Include="src\utils\global\global.h" />
     <ClInclude Include="src\utils\methods\methods.h" />
     <ClInclude Include="src\utils\types\types.h" />
+    <ClInclude Include="src\welcome_window\pages\addons_page\addons_page.h" />
+    <ClInclude Include="src\welcome_window\pages\documentation_page\documentation_page.h" />
+    <ClInclude Include="src\welcome_window\pages\environment_page\environment_page.h" />
     <ClInclude Include="src\welcome_window\welcome_window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -10,7 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-
+#include <GLFW/glfw3.h>
 #include <map>
 #include <random>
 
@@ -334,7 +334,13 @@ public:
     virtual ~UI_ELEMENT() = default;
     virtual void draw() = 0;
     virtual int get_z_index() = 0;
+    virtual void set_display(bool flag) = 0;
+    std::string class_name;
     std::string type;
+    virtual bool click_check(int mouse_x, int mouse_y) = 0;
+    std::string get_class_name() { return this->class_name; };
+    virtual int get_id() = 0;
+    virtual bool hover_check(int mouse_x_pos, int mouse_y_pos) = 0;
 };
 
 
@@ -343,14 +349,24 @@ public:
     int id;
     std::string type = "img";
     float opacity;
+    float coords[12];
+    glm::vec3 color;
+    bool display = true;
+    std::function<void()> onclick = 0;
+    void set_onclick(std::function<void()> onclick_new) { this->onclick = onclick_new; };
+    void set_display(bool flag) { this->display = flag; };
+    bool click_check(int mouse_x, int mouse_y) override;
+    bool hover_check(int mouse_x_pos, int mouse_y_pos) override { return 1; };
     int width, height, x_pos, y_pos, z_index;
     std::string texture_path;
+    int get_id() override { return this->id; };
     unsigned int VAO, VBO, texture;
     glm::mat4 projection;
     void set_texture(std::string texture_path);
     UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_path, int z_index);
     void draw() override;
     int get_z_index() override{ return this->z_index; };
+
 };
 
 class UI_FONT : public UI_ELEMENT{
@@ -359,9 +375,15 @@ public:
     std::string type = "font";
     glm::vec3 color;
     int x_pos, y_pos;
+    bool display = true;
+    void set_display(bool flag) { this->display = flag; };
+    bool click_check(int mouse_x, int mouse_y) { return false; };
     int z_index;
+    bool hover_check(int mouse_x_pos, int mouse_y_pos) override { return 1; };
     Font font;
     int pixel_size_px = 24;
+    void set_pixel_size(int pixel_size);
+    int get_id() override { return this->id; };
     std::string text;
     std::string font_name;
     int get_z_index() override { return this->z_index; };
@@ -372,11 +394,16 @@ public:
 class UI_BUTTON : public UI_ELEMENT{
 public:
     unsigned int VAO, VBO;
+    bool hover_check(int mouse_x_pos, int mouse_y_pos) override { return 1; };
     int id;
+    bool display = true;
+    void set_display(bool flag) { this->display = flag; };
     std::string type = "button";
+    bool click_check(int mouse_x, int mouse_y) { return false; };
     glm::vec3 background_color;
     void (*onclick)();
     int z_index;
+    int get_id() override { return this->id; };
     int width, height,
         x_pos, y_pos;
     int get_z_index() override { return this->z_index; };
@@ -390,14 +417,20 @@ public:
 class UI_DIV : public UI_ELEMENT{
 public:
     std::string type = "div";
+    bool display = true;
+    void set_display(bool flag) { this->display = flag; };
     unsigned int VAO, VBO;
     int id;
+    glm::vec4 radius = glm::vec4(5, 5, 5, 5);
     glm::vec3 background_color;
     int get_z_index() override { return this->z_index; };
     int z_index;
     std::function<void()> onhover;
+    bool click_check(int mouse_x, int mouse_y) override;
+    bool hover_check(int mouse_x_pos, int mouse_y_pos) override;
     bool hovered = false;
-    void (*onclick)();
+    std::function<void()> onclick;
+    int get_id() override { return this->id; };
     std::function<void()> onmouse_over;
     float coords[12];
     int width, height,
@@ -411,8 +444,8 @@ public:
     void padding_right(int padding);
     void padding_bottom(int padding);
     void padding_top(int padding);
-    void set_onclick(void(*onclick)()) { this->onclick = onclick; };
-    void attract_onclick() { this->onclick(); };
+    void set_onclick(std::function<void()> onclick) { this->onclick = onclick; };
+    void attract_onclick() { if (this->display) { this->onclick(); } };
     bool check_mouse_coords_equal(int mouse_x, int mouse_y);
     void set_onhover(std::function<void()> onhover) { this->onhover = onhover; };
     void attract_onhover() { this->onhover(); };
@@ -426,8 +459,28 @@ public:
     int id;
     bool is_changed = false;
     std::vector<std::unique_ptr<UI_ELEMENT>> ui_elements;
-
+    template <typename T, typename Func>
+    void edit_by_id(int target_id, Func&& action) {
+        for (auto&& elem : ui_elements) {
+            if (elem->get_id() == target_id) {
+                if (T* casted = dynamic_cast<T*>(elem.get())) {
+                    action(*casted);
+                    is_changed = true;
+                    return;
+                }
+            }
+        }
+        throw std::runtime_error("Element not found or type mismatch");
+    }
+    UI_ELEMENT* get_element_by_id(int target_id) {
+        for (const auto& elem : ui_elements) {
+            if (elem->get_id() == target_id) {
+                return elem.get();
+            }
+        }
+        return nullptr;
+    }
     UI_ELEM_LIST();
     void render();
-    void add_elem(std::unique_ptr<UI_ELEMENT> elem);
+    int add_elem(std::unique_ptr<UI_ELEMENT> elem);
 };

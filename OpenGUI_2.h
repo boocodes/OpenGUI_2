@@ -1,5 +1,6 @@
 #pragma once
 #define STB_IMAGE_IMPLEMENTATION
+#define _CRT_SECURE_NO_WARNINGS
 #include "src/application_window/application_window.h"
 #include "src/loading_window/loading_window.h"
 #include "src/welcome_window/welcome_window.h"

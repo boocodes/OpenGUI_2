@@ -1,7 +1,7 @@
 #include "types.h"
 #include "../global/global.h"
 #include "algorithm"
-
+#include <windows.h>
 
 // UI FONT ELEM
 
@@ -20,10 +20,24 @@ UI_FONT::UI_FONT(int x_pos, int y_pos, glm::vec3 color, int pixel_size, std::str
 	this->font_name = font_name;
 	this->font.init(font_name, pixel_size_px);
 }
-
+void UI_FONT::set_pixel_size(int pixel_size)
+{
+	if (this->pixel_size_px == pixel_size)
+	{
+		return;
+	}
+	else
+	{
+		this->pixel_size_px = pixel_size;
+		Font new_font;
+		new_font.init(this->font_name, this->pixel_size_px);
+		this->font = new_font;
+	}
+}
 void UI_FONT::draw()
 {
-	this->font.draw_text(this->text, static_cast<float>(x_pos), static_cast<float>(y_pos), this->color);
+	if(this->display)
+		this->font.draw_text(this->text, static_cast<float>(x_pos), static_cast<float>(y_pos), this->color);
 }
 
 
@@ -184,7 +198,18 @@ UI_IMG::UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_
 		static_cast<int>(x_pos + this->width), static_cast<int>(y_pos - this->height), 0.0,   0.0f, 0.0f,
 		static_cast<int>(x_pos), static_cast<int>(y_pos - this->height), 0.0,				    0.0f, 1.0f,
 	};
-
+	this->coords[0] = coords[0];
+	this->coords[1] = coords[1];
+	this->coords[2] = coords[2];
+	this->coords[3] = coords[5];
+	this->coords[4] = coords[6];
+	this->coords[5] = coords[7];
+	this->coords[6] = coords[10];
+	this->coords[7] = coords[11];
+	this->coords[8] = coords[12];
+	this->coords[9] = coords[15];
+	this->coords[10] = coords[16];
+	this->coords[11] = coords[17];
 	glGenVertexArrays(1, &this->VAO);
 	glGenBuffers(1, &this->VBO);
 	glBindVertexArray(this->VAO);
@@ -197,18 +222,22 @@ UI_IMG::UI_IMG(int width, int height, int x_pos, int y_pos, std::string texture_
 }
 void UI_IMG::draw()
 {
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	Global::img_shader.use();
-	Global::img_shader.setMat4("projection", this->projection);
-	glBindTexture(GL_TEXTURE_2D, this->texture);
-	glBindVertexArray(this->VAO);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-	glDisable(GL_BLEND);
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glEnable(GL_DEPTH_TEST);
+	if (this->display)
+	{
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		Global::img_shader.use();
+		Global::img_shader.setMat4("projection", this->projection);
+		glBindTexture(GL_TEXTURE_2D, this->texture);
+		glBindVertexArray(this->VAO);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDisable(GL_BLEND);
+		glBindVertexArray(0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glEnable(GL_DEPTH_TEST);
+	}
+	
 }
 
 
@@ -220,7 +249,21 @@ void UI_IMG::set_texture(std::string texture_path)
 }
 
 // UI BUTTON ELEM
+bool UI_IMG::click_check(int mouse_x, int mouse_y) 
+{
+	if (this->display == false || this->onclick == 0) return false;
+	if (
+		(mouse_x_pos >= this->coords[0] && mouse_x_pos <= this->coords[3] && mouse_x_pos <= this->coords[6] && mouse_x_pos >= this->coords[9])
+		&&
+		(HEIGHT - mouse_y_pos <= this->coords[1] && HEIGHT - mouse_y_pos <= this->coords[4] && HEIGHT - mouse_y_pos >= this->coords[7] && HEIGHT - mouse_y_pos >= this->coords[11])
+		)
+	{
+		this->onclick();
+		return true;
 
+	}
+	return false;
+}
 
 UI_BUTTON::UI_BUTTON(int width, int height, int x_pos, int y_pos, int z_index, void(*onclick)(), glm::vec3 background_color)
 {
@@ -252,12 +295,16 @@ UI_BUTTON::UI_BUTTON(int width, int height, int x_pos, int y_pos, int z_index, v
 }
 void UI_BUTTON::draw()
 {
-	Global::pixel_placement_shader.use();
-	Global::pixel_placement_shader.setVec3("color", this->background_color);
-	Global::pixel_placement_shader.setMat4("projection", pixel_simple_placement_projection);
-
-	glBindVertexArray(this->VAO);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	if (this->display)
+	{
+		glDisable(GL_DEPTH_TEST);
+		Global::pixel_placement_shader.use();
+		Global::pixel_placement_shader.setVec3("color", this->background_color);
+		Global::pixel_placement_shader.setMat4("projection", pixel_simple_placement_projection);
+		glBindVertexArray(this->VAO);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	}
+	
 }
 void UI_BUTTON::resize(int width, int height)
 {
@@ -296,21 +343,17 @@ void UI_ELEM_LIST::render()
 			}
 		);
 		is_changed = false;
-		// Вывод z_index для проверки
-		for (const auto& elem : ui_elements) {
-			std::cout << "z_index: " << elem->get_z_index() << std::endl;
-		}
 	}
-
-	// Отрисовка в отсортированном порядке
 	for (const auto& elem : ui_elements) {
 		elem->draw();
 	}
 }
-void UI_ELEM_LIST::add_elem(std::unique_ptr<UI_ELEMENT> elem)
+int UI_ELEM_LIST::add_elem(std::unique_ptr<UI_ELEMENT> elem)
 {
+	int result_id = elem->get_id();
 	this->ui_elements.push_back(std::move(elem));
 	this->is_changed = true;
+	return result_id;
 }
 
 
@@ -319,6 +362,7 @@ void UI_ELEM_LIST::add_elem(std::unique_ptr<UI_ELEMENT> elem)
 
 UI_DIV::UI_DIV(int width, int height, int x_pos, int y_pos, int z_index, glm::vec3 background_color)
 {
+	this->radius = glm::vec4(5, 5, 5, 5);
 	this->onhover = []() {};
 	std::string type = "div";
 	std::random_device rd;
@@ -350,7 +394,21 @@ UI_DIV::UI_DIV(int width, int height, int x_pos, int y_pos, int z_index, glm::ve
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
 	glEnableVertexAttribArray(0);
 }
+bool UI_DIV::click_check(int mouse_x, int mouse_y)
+{
+	if (this->display == false) return false;
+	if (
+		(mouse_x_pos >= this->coords[0] && mouse_x_pos <= this->coords[3] && mouse_x_pos <= this->coords[6] && mouse_x_pos >= this->coords[9])
+		&&
+		(HEIGHT - mouse_y_pos <= this->coords[1] && HEIGHT - mouse_y_pos <= this->coords[4] && HEIGHT - mouse_y_pos >= this->coords[7] && HEIGHT - mouse_y_pos >= this->coords[11])
+		)
+	{
+		this->onclick();
+		return true;
 
+	}
+	return false;
+}
 bool UI_DIV::check_mouse_coords_equal(int mouse_x, int mouse_y)
 {
 	if (
@@ -359,6 +417,7 @@ bool UI_DIV::check_mouse_coords_equal(int mouse_x, int mouse_y)
 		(HEIGHT - mouse_y <= this->coords[1] && HEIGHT - mouse_y <= this->coords[4] && HEIGHT - mouse_y >= this->coords[7] && HEIGHT - mouse_y >= this->coords[11])
 		)
 	{
+		std::cout << "Hi\n";
 		return true;
 	}
 	return false;
@@ -399,12 +458,36 @@ void UI_DIV::move(int x_pos, int y_pos)
 }
 void UI_DIV::draw()
 {
-	Global::pixel_placement_shader.use();
-	Global::pixel_placement_shader.setMat4("projection", pixel_simple_placement_projection);
-	Global::pixel_placement_shader.setVec3("color", this->background_color);
-	glBindVertexArray(this->VAO);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-	glBindVertexArray(0);
+	if (this->display)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_DEPTH_TEST);
+		Global::pixel_placement_shader.use();
+		Global::pixel_placement_shader.setMat4("projection", pixel_simple_placement_projection);
+		Global::pixel_placement_shader.setVec3("color", this->background_color);
+
+		Global::pixel_placement_shader.setFloat("radius", 0.0f);
+		glBindVertexArray(this->VAO);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glBindVertexArray(0);
+		glDisable(GL_BLEND);
+	}
+	
+}
+bool UI_DIV::hover_check(int mouse_x_pos, int mouse_y_pos)
+{
+	if (
+		(mouse_x_pos >= this->coords[0] && mouse_x_pos <= this->coords[3] && mouse_x_pos <= this->coords[6] && mouse_x_pos >= this->coords[9])
+		&&
+		(HEIGHT - mouse_y_pos <= this->coords[1] && HEIGHT - mouse_y_pos <= this->coords[4] && HEIGHT - mouse_y_pos >= this->coords[7] && HEIGHT - mouse_y_pos >= this->coords[11])
+		)
+	{
+		this->onhover();
+		return true;
+
+	}
+	return false;
 }
 void UI_DIV::centred()
 {
@@ -442,7 +525,7 @@ void UI_DIV::padding_bottom(int padding)
 }
 void UI_DIV::padding_top(int padding)
 {
-	float new_y_pos = static_cast<float>(this->y_pos - padding);
+	float new_y_pos = static_cast<float>(this->y_pos -	 padding);
 	this->y_pos = this->y_pos - padding;
 	float coords[12] = {
 		static_cast<float>(this->x_pos), new_y_pos, 0.0,

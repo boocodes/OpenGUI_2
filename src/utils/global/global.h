@@ -6,6 +6,11 @@ extern int WIDTH;
 extern int HEIGHT;
 
 
+extern int mouse_x_pos;
+extern int mouse_y_pos;
+
+extern std::string working_path;
+extern std::string project_name;
 
 extern glm::mat4 pixel_simple_placement_projection;
 
